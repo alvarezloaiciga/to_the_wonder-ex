@@ -1,0 +1,80 @@
+<div class="flex h-screen bg-gray-100">
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-gray-900 shadow-lg">
+    <div class="flex flex-col h-full">
+      <!-- Logo -->
+      <div class="flex items-center justify-center h-20 border-b border-gray-700">
+        <img src={~p"/images/logo.png"} alt="To The Wonder" width="150" />
+      </div>
+      
+<!-- Navigation -->
+      <nav class="flex-1 px-4 py-4 space-y-1">
+        <.link
+          navigate={~p"/admin"}
+          class={"flex items-center px-4 py-2 rounded-lg group #{
+            if @current_page == :dashboard,
+            do: "bg-gray-800 text-white",
+            else: "text-gray-300 hover:bg-gray-800 hover:text-white"
+          }"}
+        >
+          <.icon name="hero-home" class="w-5 h-5 mr-3" /> Dashboard
+        </.link>
+
+        <.link
+          navigate={~p"/admin/instructors"}
+          class={"flex items-center px-4 py-2 rounded-lg group #{
+            if @current_page == :instructors,
+            do: "bg-gray-800 text-white",
+            else: "text-gray-300 hover:bg-gray-800 hover:text-white"
+          }"}
+        >
+          <.icon name="hero-users" class="w-5 h-5 mr-3" /> Instructors
+        </.link>
+
+        <.link
+          navigate={~p"/admin/trips"}
+          class={"flex items-center px-4 py-2 rounded-lg group #{
+            if @current_page == :trips,
+            do: "bg-gray-800 text-white",
+            else: "text-gray-300 hover:bg-gray-800 hover:text-white"
+          }"}
+        >
+          <.icon name="hero-globe-alt" class="w-5 h-5 mr-3" /> Trips
+        </.link>
+
+        <.link
+          navigate={~p"/admin/customers"}
+          class={"flex items-center px-4 py-2 rounded-lg group #{
+            if @current_page == :customers,
+            do: "bg-gray-800 text-white",
+            else: "text-gray-300 hover:bg-gray-800 hover:text-white"
+          }"}
+        >
+          <.icon name="hero-user-group" class="w-5 h-5 mr-3" /> Customers
+        </.link>
+      </nav>
+      
+<!-- User Info & Logout -->
+      <div class="p-4 border-t border-gray-700">
+        <div class="flex flex-col gap-2">
+          <div class="text-sm text-gray-400">
+            {@current_user.email}
+          </div>
+          <.link
+            href={~p"/users/log_out"}
+            method="delete"
+            class="text-sm text-red-400 hover:text-red-300"
+          >
+            Sign out
+          </.link>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<!-- Main Content -->
+  <div class="flex-1 ml-64 p-8">
+    <.flash_group flash={@flash} />
+    {@inner_content}
+  </div>
+</div>

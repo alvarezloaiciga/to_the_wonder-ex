@@ -69,6 +69,17 @@ defmodule ToTheWonderWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
     end
+
+    scope "/admin", Admin do
+      live_session :admin,
+        on_mount: [{ToTheWonderWeb.UserAuth, :ensure_authenticated}],
+        layout: {ToTheWonderWeb.Layouts, :admin} do
+        live "/", DashboardLive, :index
+        live "/instructors", InstructorsLive, :index
+        live "/trips", TripsLive, :index
+        live "/customers", CustomersLive, :index
+      end
+    end
   end
 
   scope "/", ToTheWonderWeb do
