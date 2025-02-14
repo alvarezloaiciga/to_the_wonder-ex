@@ -4,6 +4,10 @@ defmodule ToTheWonder.Accounts.User do
 
   schema "users" do
     field :email, :string
+    field :name, :string
+    field :picture, :map
+    field :bio, :string
+    field :instagram_handle, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
@@ -37,9 +41,13 @@ defmodule ToTheWonder.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :name, :picture, :bio, :instagram_handle])
     |> validate_email(opts)
     |> validate_password(opts)
+    |> validate_name()
+    |> validate_bio()
+    |> validate_instagram_handle()
+    |> handle_picture()
   end
 
   defp validate_email(changeset, opts) do
@@ -157,5 +165,105 @@ defmodule ToTheWonder.Accounts.User do
     else
       add_error(changeset, :current_password, "is not valid")
     end
+  end
+
+  defp validate_name(changeset) do
+    changeset
+    |> validate_required([:name])
+    |> validate_length(:name, min: 2, max: 50)
+  end
+
+  defp validate_bio(changeset) do
+    changeset
+    |> validate_length(:bio, max: 500, message: "bio must be less than 500 characters")
+  end
+
+  defp validate_instagram_handle(changeset) do
+    changeset
+    |> validate_format(:instagram_handle, ~r/^@?[a-zA-Z0-9._]{1,30}$/,
+      message: "must be a valid Instagram handle")
+    |> update_change(:instagram_handle, fn
+      nil -> nil
+      handle ->
+        handle = if String.starts_with?(handle, "@"), do: handle, else: "@#{handle}"
+        String.downcase(handle)
+    end)
+  end
+
+  defp handle_picture(changeset) do
+    if upload = get_change(changeset, :picture) do
+      if Mix.env() == :prod do
+        case upload_pictures_to_aws(upload) do
+          {:ok, urls} -> put_change(changeset, :picture, urls)
+          {:error, error} -> add_error(changeset, :picture, "failed to upload: #{error}")
+        end
+      else
+        # In development/test, just store the filename
+        put_change(changeset, :picture, %{
+          "original" => upload.filename,
+          "large" => upload.filename,
+          "medium" => upload.filename,
+          "small" => upload.filename
+        })
+      end
+    else
+      changeset
+    end
+  end
+
+  defp upload_pictures_to_aws(%{path: path, filename: filename}) do
+    bucket = System.get_env("AWS_BUCKET_NAME")
+    unique_id = UUID.uuid4()
+
+    try do
+      {:ok, original_binary} = File.read(path)
+
+      sizes = %{
+        "original" => nil,
+        "large" => "800x800",
+        "medium" => "400x400",
+        "small" => "200x200"
+      }
+
+      urls =
+        Enum.reduce(sizes, %{}, fn {size_name, dimensions}, acc ->
+          unique_filename = "#{unique_id}-#{size_name}-#{filename}"
+
+          image_binary =
+            if dimensions do
+              {:ok, resized} =
+                Image.open(path)
+                |> Image.resize(dimensions)
+                |> Image.save(in_memory: true)
+              resized
+            else
+              original_binary
+            end
+
+          case ExAws.S3.put_object(bucket, unique_filename, image_binary, [
+            acl: :public_read,
+            content_type: MIME.from_path(filename)
+          ]) |> ExAws.request() do
+            {:ok, _} ->
+              Map.put(acc, size_name, "https://#{bucket}.s3.amazonaws.com/#{unique_filename}")
+            {:error, error} ->
+              raise "Failed to upload #{size_name}: #{inspect(error)}"
+          end
+        end)
+
+      {:ok, urls}
+    rescue
+      e -> {:error, "Image processing failed: #{inspect(e)}"}
+    end
+  end
+
+  def profile_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:name, :email, :bio, :instagram_handle, :picture])
+    |> validate_required([:name, :email])
+    |> validate_email([])
+    |> validate_bio()
+    |> validate_instagram_handle()
+    |> handle_picture()
   end
 end

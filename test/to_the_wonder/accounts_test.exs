@@ -505,4 +505,62 @@ defmodule ToTheWonder.AccountsTest do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
     end
   end
+
+  test "list_users/0 returns all users sorted by name" do
+    user3 = user_fixture(%{name: "Charlie"})
+    user1 = user_fixture(%{name: "Alice"})
+    user2 = user_fixture(%{name: "Bob"})
+
+    users = Accounts.list_users()
+
+    assert length(users) == 3
+    assert Enum.map(users, & &1.name) == ["Alice", "Bob", "Charlie"]
+  end
+
+  describe "user profile" do
+    alias ToTheWonder.Accounts.User
+
+    @valid_profile_attrs %{
+      name: "Updated Name",
+      email: "updated@example.com",
+      bio: "My new bio",
+      instagram_handle: "@newhandle"
+    }
+    @invalid_profile_attrs %{
+      name: nil,
+      email: "not-an-email",
+      bio: nil,
+      instagram_handle: nil
+    }
+
+    test "change_user_profile/2 returns a user changeset" do
+      user = user_fixture()
+      assert %Ecto.Changeset{} = Accounts.change_user_profile(user)
+    end
+
+    test "update_user_profile/2 with valid data updates the user" do
+      user = user_fixture()
+      assert {:ok, %User{} = updated_user} = Accounts.update_user_profile(user, @valid_profile_attrs)
+      assert updated_user.name == "Updated Name"
+      assert updated_user.email == "updated@example.com"
+      assert updated_user.bio == "My new bio"
+      assert updated_user.instagram_handle == "@newhandle"
+    end
+
+    test "update_user_profile/2 with invalid data returns error changeset" do
+      user = user_fixture()
+      assert {:error, %Ecto.Changeset{}} = Accounts.update_user_profile(user, @invalid_profile_attrs)
+      assert user == Accounts.get_user!(user.id)
+    end
+
+    test "update_user_profile/2 with blank optional fields" do
+      user = user_fixture()
+      attrs = %{@valid_profile_attrs | bio: nil, instagram_handle: nil}
+      assert {:ok, %User{} = updated_user} = Accounts.update_user_profile(user, attrs)
+      assert updated_user.name == "Updated Name"
+      assert updated_user.email == "updated@example.com"
+      assert updated_user.bio == nil
+      assert updated_user.instagram_handle == nil
+    end
+  end
 end

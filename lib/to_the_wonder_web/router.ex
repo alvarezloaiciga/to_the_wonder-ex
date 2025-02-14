@@ -75,7 +75,8 @@ defmodule ToTheWonderWeb.Router do
         on_mount: [{ToTheWonderWeb.UserAuth, :ensure_authenticated}],
         layout: {ToTheWonderWeb.Layouts, :admin} do
         live "/", DashboardLive, :index
-        live "/instructors", InstructorsLive, :index
+        live "/users", Users.IndexLive, :index
+        live "/users/:id/edit", Users.EditLive, :edit
         live "/trips", TripsLive, :index
         live "/customers", CustomersLive, :index
       end

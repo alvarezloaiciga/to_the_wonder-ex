@@ -673,4 +673,58 @@ defmodule ToTheWonderWeb.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
+  @doc """
+  Renders an admin header with breadcrumbs and optional actions.
+
+  ## Examples
+
+      <.admin_header>
+        <:breadcrumb navigate={~p"/admin"}>Dashboard</:breadcrumb>
+        <:breadcrumb navigate={~p"/admin/users"}>Users</:breadcrumb>
+        <:breadcrumb>Edit User</:breadcrumb>
+
+        <:actions>
+          <.button>New User</.button>
+        </:actions>
+      </.admin_header>
+  """
+  attr :class, :string, default: nil
+
+  slot :breadcrumb do
+    attr :navigate, :any
+  end
+  slot :actions
+
+  def admin_header(assigns) do
+    ~H"""
+    <div class={["pb-5 border-b border-gray-200", @class]}>
+      <nav class="flex mb-4" aria-label="Breadcrumb">
+        <ol role="list" class="flex items-center space-x-4">
+          <li :for={{crumb, i} <- Enum.with_index(@breadcrumb)}>
+            <div class="flex items-center">
+              <.icon :if={i > 0} name="hero-chevron-right" class="flex-shrink-0 h-5 w-5 text-gray-400" />
+              <div class={i > 0 && "ml-4"}>
+                <%= if crumb[:navigate] do %>
+                  <.link navigate={crumb[:navigate]} class="text-sm font-medium text-gray-500 hover:text-gray-700">
+                    <%= render_slot(crumb) %>
+                  </.link>
+                <% else %>
+                  <span class="text-sm font-medium text-gray-700">
+                    <%= render_slot(crumb) %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </nav>
+      <div class="flex justify-end">
+        <div class="flex-none">
+          <%= render_slot(@actions) %>
+        </div>
+      </div>
+    </div>
+    """
+  end
 end

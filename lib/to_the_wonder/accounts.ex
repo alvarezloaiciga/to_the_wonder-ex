@@ -350,4 +350,50 @@ defmodule ToTheWonder.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  @doc """
+  Returns a list of all users, sorted by name.
+
+  ## Examples
+
+      iex> list_users()
+      [%User{name: "Alice"}, %User{name: "Bob"}, ...]
+
+  """
+  def list_users do
+    User
+    |> order_by(asc: :name)
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user profile changes.
+
+  ## Examples
+
+      iex> change_user_profile(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_profile(%User{} = user, attrs \\ %{}) do
+    User.profile_changeset(user, attrs)
+  end
+
+  @doc """
+  Updates a user's profile.
+
+  ## Examples
+
+      iex> update_user_profile(user, %{name: "New Name"})
+      {:ok, %User{}}
+
+      iex> update_user_profile(user, %{email: "invalid"})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_profile(%User{} = user, attrs) do
+    user
+    |> User.profile_changeset(attrs)
+    |> Repo.update()
+  end
 end
