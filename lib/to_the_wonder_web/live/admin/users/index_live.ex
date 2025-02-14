@@ -28,7 +28,11 @@ defmodule ToTheWonderWeb.Admin.Users.IndexLive do
                 <%= if user.picture["small"] do %>
                   <div class="avatar">
                     <div class="w-16 h-16 rounded-full overflow-hidden">
-                      <img src={user.picture["small"]} alt={user.name} class="w-full h-full object-cover rounded-full">
+                      <img
+                        src={user.picture["small"]}
+                        alt={user.name}
+                        class="w-full h-full object-cover rounded-full"
+                      />
                     </div>
                   </div>
                 <% else %>
@@ -37,8 +41,8 @@ defmodule ToTheWonderWeb.Admin.Users.IndexLive do
                   </div>
                 <% end %>
                 <div>
-                  <h2 class="card-title"><%= user.name %></h2>
-                  <p class="text-gray-600"><%= user.email %></p>
+                  <h2 class="card-title">{user.name}</h2>
+                  <p class="text-gray-600">{user.email}</p>
                 </div>
               </div>
 
@@ -53,7 +57,8 @@ defmodule ToTheWonderWeb.Admin.Users.IndexLive do
                   phx-click="delete"
                   phx-value-id={user.id}
                   data-confirm="Are you sure?"
-                  class="btn btn-ghost btn-sm">
+                  class="btn btn-ghost btn-sm"
+                >
                   <.icon name="hero-trash" class="w-5 h-5 text-red-500" />
                 </.link>
               </div>

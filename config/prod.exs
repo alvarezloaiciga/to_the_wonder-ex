@@ -30,5 +30,4 @@ config :ex_aws, :s3,
   host: "s3.amazonaws.com",
   region: System.get_env("AWS_REGION")
 
-config :to_the_wonder, :aws,
-  bucket_name: System.get_env("AWS_BUCKET_NAME")
+config :to_the_wonder, :aws, bucket_name: System.get_env("AWS_BUCKET_NAME")

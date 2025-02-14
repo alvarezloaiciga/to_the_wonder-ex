@@ -181,9 +181,12 @@ defmodule ToTheWonder.Accounts.User do
   defp validate_instagram_handle(changeset) do
     changeset
     |> validate_format(:instagram_handle, ~r/^@?[a-zA-Z0-9._]{1,30}$/,
-      message: "must be a valid Instagram handle")
+      message: "must be a valid Instagram handle"
+    )
     |> update_change(:instagram_handle, fn
-      nil -> nil
+      nil ->
+        nil
+
       handle ->
         handle = if String.starts_with?(handle, "@"), do: handle, else: "@#{handle}"
         String.downcase(handle)
@@ -235,17 +238,20 @@ defmodule ToTheWonder.Accounts.User do
                 Image.open(path)
                 |> Image.resize(dimensions)
                 |> Image.save(in_memory: true)
+
               resized
             else
               original_binary
             end
 
-          case ExAws.S3.put_object(bucket, unique_filename, image_binary, [
-            acl: :public_read,
-            content_type: MIME.from_path(filename)
-          ]) |> ExAws.request() do
+          case ExAws.S3.put_object(bucket, unique_filename, image_binary,
+                 acl: :public_read,
+                 content_type: MIME.from_path(filename)
+               )
+               |> ExAws.request() do
             {:ok, _} ->
               Map.put(acc, size_name, "https://#{bucket}.s3.amazonaws.com/#{unique_filename}")
+
             {:error, error} ->
               raise "Failed to upload #{size_name}: #{inspect(error)}"
           end

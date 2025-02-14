@@ -540,7 +540,10 @@ defmodule ToTheWonder.AccountsTest do
 
     test "update_user_profile/2 with valid data updates the user" do
       user = user_fixture()
-      assert {:ok, %User{} = updated_user} = Accounts.update_user_profile(user, @valid_profile_attrs)
+
+      assert {:ok, %User{} = updated_user} =
+               Accounts.update_user_profile(user, @valid_profile_attrs)
+
       assert updated_user.name == "Updated Name"
       assert updated_user.email == "updated@example.com"
       assert updated_user.bio == "My new bio"
@@ -549,7 +552,10 @@ defmodule ToTheWonder.AccountsTest do
 
     test "update_user_profile/2 with invalid data returns error changeset" do
       user = user_fixture()
-      assert {:error, %Ecto.Changeset{}} = Accounts.update_user_profile(user, @invalid_profile_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.update_user_profile(user, @invalid_profile_attrs)
+
       assert user == Accounts.get_user!(user.id)
     end
 

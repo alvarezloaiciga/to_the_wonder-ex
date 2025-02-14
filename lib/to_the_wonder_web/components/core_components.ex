@@ -694,6 +694,7 @@ defmodule ToTheWonderWeb.CoreComponents do
   slot :breadcrumb do
     attr :navigate, :any
   end
+
   slot :actions
 
   def admin_header(assigns) do
@@ -703,15 +704,22 @@ defmodule ToTheWonderWeb.CoreComponents do
         <ol role="list" class="flex items-center space-x-4">
           <li :for={{crumb, i} <- Enum.with_index(@breadcrumb)}>
             <div class="flex items-center">
-              <.icon :if={i > 0} name="hero-chevron-right" class="flex-shrink-0 h-5 w-5 text-gray-400" />
+              <.icon
+                :if={i > 0}
+                name="hero-chevron-right"
+                class="flex-shrink-0 h-5 w-5 text-gray-400"
+              />
               <div class={i > 0 && "ml-4"}>
                 <%= if crumb[:navigate] do %>
-                  <.link navigate={crumb[:navigate]} class="text-sm font-medium text-gray-500 hover:text-gray-700">
-                    <%= render_slot(crumb) %>
+                  <.link
+                    navigate={crumb[:navigate]}
+                    class="text-sm font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    {render_slot(crumb)}
                   </.link>
                 <% else %>
                   <span class="text-sm font-medium text-gray-700">
-                    <%= render_slot(crumb) %>
+                    {render_slot(crumb)}
                   </span>
                 <% end %>
               </div>
@@ -721,7 +729,7 @@ defmodule ToTheWonderWeb.CoreComponents do
       </nav>
       <div class="flex justify-end">
         <div class="flex-none">
-          <%= render_slot(@actions) %>
+          {render_slot(@actions)}
         </div>
       </div>
     </div>
