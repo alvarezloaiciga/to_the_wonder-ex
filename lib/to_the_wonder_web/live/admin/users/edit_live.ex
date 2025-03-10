@@ -1,7 +1,6 @@
 defmodule ToTheWonderWeb.Admin.Users.EditLive do
   use ToTheWonderWeb, :live_view
   alias ToTheWonder.Accounts
-  import ToTheWonderWeb.Users.FormComponent
 
   def mount(%{"id" => id}, _session, socket) do
     user = Accounts.get_user!(id)

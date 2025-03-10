@@ -4,12 +4,17 @@ defmodule ToTheWonderWeb.Users.FormComponent do
   alias ToTheWonder.Accounts
 
   def update(%{user: user} = assigns, socket) do
-    changeset = Accounts.change_user_profile(user)
+    changeset =
+      case assigns.action do
+        :new -> Accounts.change_user_registration(user)
+        :edit -> Accounts.change_user_profile(user)
+      end
 
     {:ok,
      socket
      |> assign(assigns)
      |> assign(:changeset, changeset)
+     |> assign_form(changeset)
      |> allow_upload(:picture,
        accept: ~w(.jpg .jpeg .png),
        max_entries: 1,
@@ -20,10 +25,13 @@ defmodule ToTheWonderWeb.Users.FormComponent do
   def handle_event("validate", %{"user" => user_params}, socket) do
     changeset =
       socket.assigns.user
-      |> Accounts.change_user_profile(user_params)
+      |> case do
+        %{id: nil} -> Accounts.change_user_registration(socket.assigns.user, user_params)
+        _ -> Accounts.change_user_profile(socket.assigns.user, user_params)
+      end
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign(socket, :changeset, changeset) |> assign_form(changeset)}
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do
@@ -46,6 +54,27 @@ defmodule ToTheWonderWeb.Users.FormComponent do
         [] -> user_params
       end
 
+    save_user(socket, socket.assigns.action, user_params)
+  end
+
+  def handle_event("cancel-upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :picture, ref)}
+  end
+
+  defp save_user(socket, :new, user_params) do
+    case Accounts.register_user(user_params) do
+      {:ok, _user} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "User created successfully")
+         |> push_navigate(to: ~p"/admin/users")}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, :changeset, changeset) |> assign_form(changeset)}
+    end
+  end
+
+  defp save_user(socket, :edit, user_params) do
     case Accounts.update_user_profile(socket.assigns.user, user_params) do
       {:ok, _user} ->
         {:noreply,
@@ -54,26 +83,24 @@ defmodule ToTheWonderWeb.Users.FormComponent do
          |> push_navigate(to: ~p"/admin/users")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign(socket, :changeset, changeset) |> assign_form(changeset)}
     end
   end
 
-  def handle_event("cancel-upload", %{"ref" => ref}, socket) do
-    {:noreply, cancel_upload(socket, :picture, ref)}
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    form = to_form(changeset, as: "user")
+
+    if changeset.valid? do
+      assign(socket, form: form, check_errors: false)
+    else
+      assign(socket, form: form)
+    end
   end
 
   def render(assigns) do
     ~H"""
     <div>
-      <.simple_form
-        :let={f}
-        for={@changeset}
-        phx-target={@myself}
-        action={@action}
-        phx-submit="save"
-        phx-change="validate"
-        multipart
-      >
+      <.simple_form for={@form} phx-target={@myself} phx-submit="save" phx-change="validate" multipart>
         <div class="space-y-12 max-w-3xl">
           <div class="border-b border-gray-900/10 pb-12">
             <h2 class="text-base/7 font-semibold text-gray-900">Profile</h2>
@@ -84,7 +111,7 @@ defmodule ToTheWonderWeb.Users.FormComponent do
             <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
               <div class="sm:col-span-4">
                 <.input
-                  field={f[:name]}
+                  field={@form[:name]}
                   type="text"
                   label="Name"
                   required
@@ -94,7 +121,7 @@ defmodule ToTheWonderWeb.Users.FormComponent do
 
               <div class="sm:col-span-4">
                 <.input
-                  field={f[:email]}
+                  field={@form[:email]}
                   type="email"
                   label="Email"
                   required
@@ -104,7 +131,7 @@ defmodule ToTheWonderWeb.Users.FormComponent do
 
               <div class="sm:col-span-4">
                 <.input
-                  field={f[:bio]}
+                  field={@form[:bio]}
                   type="textarea"
                   label="Bio"
                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
@@ -174,7 +201,7 @@ defmodule ToTheWonderWeb.Users.FormComponent do
 
               <div class="sm:col-span-4">
                 <.input
-                  field={f[:instagram_handle]}
+                  field={@form[:instagram_handle]}
                   type="text"
                   label="Instagram Handle"
                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"

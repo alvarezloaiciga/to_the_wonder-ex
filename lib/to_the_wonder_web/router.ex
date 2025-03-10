@@ -76,6 +76,7 @@ defmodule ToTheWonderWeb.Router do
         layout: {ToTheWonderWeb.Layouts, :admin} do
         live "/", DashboardLive, :index
         live "/users", Users.IndexLive, :index
+        live "/users/new", Users.NewLive, :new
         live "/users/:id/edit", Users.EditLive, :edit
         live "/trips", TripsLive, :index
         live "/customers", CustomersLive, :index
